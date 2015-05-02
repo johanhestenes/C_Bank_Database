@@ -1,0 +1,589 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sqlenv.h>
+#include <sqlutil.h>
+
+int TbColumnInfoGet(void);
+int TbColumnInfoGet2(void);
+int TbColumnInfoGet3(void);
+int TbColumnInfoGet4(void);
+
+EXEC SQL BEGIN DECLARE SECTION;
+  char tableName[128];
+  char schemaName[128];
+  char columnName[20];
+  char dataType[14];
+  sqlint32 dataLength;
+  short dataScale;
+  char dbAlias[15];
+  char user[129];
+  char pswd[15];
+  
+  char name[15];
+  char gender;
+  int age;
+  int pin;
+		 
+  int maxID;
+  
+  int id;
+  int enteryourpin;
+  
+  int dbid; // to check if exists
+  int dbpin; // to check if exists
+  
+  int userID;
+  // end screen 2
+  
+  // screen 3
+  // 1
+  int customerID;
+  char accountType;
+  int initialDeposit;
+  int dbID2;
+  int maxAccount; // for printing account number
+  // 2
+  int accNo2;
+  // 3
+  int accNo3;
+  int deposit;
+  // 4
+  int accNo4;
+  int withdraw;
+  int dbBalance4;
+  // 5
+  int source;
+  int destination;
+  int transferAmount;
+  int dbBalance5;
+  // 6
+  int totalBalance6;
+  
+  // screen 4
+  // 1
+  int totalBalance4;
+  int inputID;
+  // 2
+  char id0[256];
+  char age0[256];
+  char gender0[256];
+  char total0[256];
+  // 3
+  int min;
+  int max;
+  
+EXEC SQL END DECLARE SECTION;
+
+void cleartoendofline( void )
+{
+	char ch;
+	ch = getchar();
+	while( ch != '\n' )
+		ch = getchar();
+}
+
+int main(int argc, char *argv[])
+{
+  struct sqlca sqlca;
+  int rc = 0;
+  char ch; /* handles user input */
+  int exit1 = 0;
+  char ch2;
+  
+  /* check the command line arguments */
+  if (argc < 2)
+  {
+    printf("Usage p2 dbAlias");
+  }
+  else
+  {
+    strcpy(dbAlias, argv[1]);
+
+    /* connect to the database */
+    //printf("\n  Connecting to '%s' database...\n", dbAlias);
+    
+/*     EXEC SQL CONNECT TO :dbAlias USER :user USING :pswd; */
+
+    EXEC SQL CONNECT TO :dbAlias;
+  
+    //printf("  Connected to '%s' database.\n", dbAlias);
+
+    //strcpy(tableName, "EMPLOYEE");
+	
+	while (exit1 == 0)
+   {
+      printf("Screen # 1(Title - Welcome to the Self Services Banking System! - Main Menu)\n");
+      printf("   1.  New Customer\n");
+      printf("   2.  Customer Login\n");
+      printf("   3.  Exit\n");
+      
+      fflush(stdin);
+      scanf(" %c", &ch);
+      
+      if (ch == '1')
+      {  
+         int i1 = 0;
+         while (i1 == 0)
+         {
+            printf("Enter customer name\n");
+            scanf("%s", name);
+            if (strlen(name) <= 15)
+            {
+               i1 = 1;
+            }
+         }
+         int i2 = 0;
+         while (i2 == 0)
+         {
+            printf("Enter customer gender (M or F)\n");
+            scanf(" %c", &gender);
+            if (gender == 'M' || gender == 'F')
+            {
+               i2 = 1;
+            }
+         }
+         int i3 = 0;
+         while (i3 == 0)
+         {
+            printf("Enter customer age\n");
+            scanf("%d", &age);
+            if (age >= 0)
+            {
+               i3 = 1;
+            }
+         }
+         int i4 = 0;
+         while (i4 == 0)
+         {
+            printf("Enter customer pin\n");
+            scanf("%d", &pin);
+            if (pin >= 0)
+            {
+               i4 = 1;
+            }
+         }
+         
+		 EXEC SQL INSERT INTO P2.Customer (Name, Gender, Age, Pin) VALUES (:name, :gender, :age, :pin);
+		 
+		 EXEC SQL SELECT Max(ID) INTO :maxID FROM P2.Customer;
+		 printf("Your ID is %d\n", maxID);
+      }
+      else if (ch == '2')
+      {
+         int valid = 0;
+         int adminID = 0;
+         int adminPin = 0;
+        
+		
+        int i1 = 0;
+        while (i1 == 0)
+		{
+            printf("Enter your ID\n");
+			scanf("%d", &id);
+			
+			EXEC SQL SELECT ID INTO :dbid FROM P2.Customer WHERE ID=:id; // check if id exists in db
+			
+			if (id == 0)
+			{
+				adminID = 1;
+			}
+			if (id == dbid)
+			{
+				userID = id;
+				i1 = 1;
+			}
+        }
+		
+		int i2 = 0;
+        while (i2 == 0)
+		{
+            printf("Enter your pin\n");
+			scanf("%d", &enteryourpin);
+			
+			EXEC SQL SELECT Pin INTO :dbpin FROM P2.Customer WHERE ID=:id AND Pin=:enteryourpin; // check if id exists in db
+			
+			if (enteryourpin == 0)
+			{
+				adminPin = 1;
+			}
+			if (enteryourpin == dbpin)
+			{
+				valid = 1;
+				i2 = 1;
+			}
+        }
+		// screen 4
+		if (adminID == 1 && adminPin == 1)
+		{
+			int exit4 = 0;
+			char ch4;
+			
+			while (exit4 == 0)
+			{
+				printf("Screen # 4(Title - Customer Main Menu)\n");
+				printf("   1.  Account Summary for a Customer\n");
+				printf("   2.  Report A :: Customer Information with Total Balance in Decreasing Order\n");
+				printf("   3.  Report B :: Find the Average Total Balance Between Age Groups\n");
+				printf("   4.  Exit\n");
+				
+				scanf(" %c", &ch4);
+				
+				if (ch4 == '1')
+				{
+					totalBalance4 = 0;
+					printf("Enter the customer ID\n");
+					scanf("%d", &inputID);
+					
+					rc = TbColumnInfoGet2();
+					
+					EXEC SQL SELECT SUM(Balance) INTO :totalBalance4 FROM P2.Account WHERE Id=:inputID;
+					printf("TOTAL BALANCE: %d\n", totalBalance4);
+				}
+				else if (ch4 == '2')
+				{
+					rc = TbColumnInfoGet3();
+				}
+				else if (ch4 == '3')
+				{
+					min = 0;
+					max = 0;
+					//fflush(stdin);
+					printf("Enter the minimum age\n");
+					scanf("%d", &min);
+					
+					printf("Enter the maximum age\n");
+					scanf("%d", &max);
+					
+					rc = TbColumnInfoGet4();
+				}
+				else if (ch4 == '4')
+				{
+					exit4 = 1;
+				}
+			}
+		}
+		// screen 3
+		if (valid == 1 && adminID == 0 && adminPin == 0)
+		{
+			int exit3 = 0;
+			char ch2;
+			
+			while (exit3 == 0)
+			{
+				printf("Screen # 3(Title - Customer Main Menu)\n");
+				printf("   1.  Open Account\n");
+				printf("   2.  Close Account\n");
+				printf("   3.  Deposit\n");
+				printf("   4.  Withdraw\n");
+				printf("   5.  Transfer\n");
+				printf("   6.  Account Summary\n");
+				printf("   7.  Exit\n");
+				
+				scanf(" %c", &ch2);
+				
+				if (ch2 == '1') // open account
+				{
+					int b1 = 0;
+					while (b1 == 0)
+					{
+						printf("Enter customer ID\n");
+						scanf("%d", &customerID);
+						EXEC SQL SELECT ID INTO :dbID2 FROM P2.Customer WHERE ID=:customerID;
+						if (customerID == dbID2)
+						{
+							b1 = 1;
+						}
+					}
+					int b2 = 0;
+					while (b2 == 0)
+					{
+						printf("Enter account type (C for Checking, S for Saving)\n");
+						scanf(" %c", &accountType);
+						if (accountType == 'C' || accountType == 'S')
+						{
+							b2 = 1;
+						}
+					}
+					int b3 = 0;
+					while (b3 == 0)
+					{
+						printf("Enter initial deposit\n");
+						scanf("%d", &initialDeposit);
+						if (initialDeposit >= 0)
+						{
+							b3 = 1;
+						}
+					}
+					
+					EXEC SQL INSERT INTO P2.Account (ID, Balance, Type, Status) VALUES (:customerID, :initialDeposit, :accountType, 'A');
+					
+					EXEC SQL SELECT Max(Number) INTO :maxAccount FROM P2.Account;
+					printf("Your account number is %d\n", maxAccount);
+				}
+				else if (ch2 == '2') // close account
+				{
+					printf("Enter the account number\n");
+					scanf("%d", &accNo2);
+					
+					EXEC SQL UPDATE P2.Account SET Balance='0', Status='I' WHERE Number=:accNo2 AND ID=:userID;
+				}
+				else if (ch2 == '3') // deposit
+				{
+					printf("Enter the account number\n");
+					scanf("%d", &accNo3);
+					
+					printf("Enter the amount to deposit\n");
+					scanf("%d", &deposit);
+					
+					EXEC SQL UPDATE P2.Account SET Balance = Balance + :deposit WHERE Number=:accNo3;
+				}
+				else if (ch2 == '4') // withdraw
+				{
+					printf("Enter the account number\n");
+					scanf("%d", &accNo4);
+					
+					printf("Enter the amount to withdraw\n");
+					scanf("%d", &withdraw);
+					
+					// make sure it doesn't overdraw
+					EXEC SQL SELECT Balance INTO :dbBalance4 FROM P2.Account WHERE Number=:accNo4;
+					
+					if (withdraw > dbBalance4)
+					{
+						printf("ERROR: Invalid amount entered.\n");
+						withdraw = 0;
+					}
+					
+					EXEC SQL UPDATE P2.Account SET Balance = Balance - :withdraw WHERE Number=:accNo4 AND ID=:userID;
+				}
+				else if (ch2 == '5') // transfer
+				{
+					printf("Enter the source account number\n");
+					scanf("%d", &source);
+					
+					printf("Enter the destination account number\n");
+					scanf("%d", &destination);
+					
+					printf("Enter the amount to transfer\n");
+					scanf("%d", &transferAmount);
+					
+					// make sure it doesn't overdraw
+					EXEC SQL SELECT Balance into :dbBalance5 FROM P2.Account WHERE Number=:source;
+					
+					if (transferAmount > dbBalance5)
+					{
+						printf("ERROR: Invalid amount entered.\n");
+						transferAmount = 0;
+					}
+					
+					EXEC SQL UPDATE P2.Account SET Balance = Balance - :transferAmount WHERE Number=:source AND ID=:userID; // withdraw
+
+					EXEC SQL UPDATE P2.Account SET Balance = Balance + :transferAmount WHERE Number=:destination; // deposit
+				}
+				else if (ch2 == '6') // account summary
+				{
+					rc = TbColumnInfoGet();
+					
+					EXEC SQL SELECT SUM(Balance) INTO :totalBalance6 FROM P2.Account WHERE Id=:userID;
+					printf("TOTAL BALANCE: %d\n", totalBalance6);
+				}
+				else if (ch2 == '7') // exit
+				{
+					exit3 = 1;
+				}
+			}
+		}
+      }
+      else if (ch == '3')
+      {
+         exit1 = 1;
+      }
+	  
+   }
+	
+    /* disconnect from the database */
+    EXEC SQL CONNECT RESET;
+  }
+    return 0;
+} /* end main */
+
+int TbColumnInfoGet(void)
+{
+  struct sqlca sqlca;
+
+  /* get info for table columns */
+  printf("     Number          Balance    \n");
+  printf("----------------- --------------\n");
+
+
+	 EXEC SQL DECLARE c1 CURSOR FOR
+    SELECT Number, Balance 
+      FROM P2.Account WHERE Status = 'A' AND Id=:userID;
+	 
+  EXEC SQL OPEN c1;
+  /* EMB_SQL_CHECK("Cursor -- Open"); */
+
+  EXEC SQL FETCH c1 INTO :columnName, :dataType, :dataLength, :dataScale;;
+  /* EMB_SQL_CHECK("Cursor -- Fetch"); */
+
+  if (sqlca.sqlcode == 100)
+  {
+    printf("\n  Data not found.\n");
+  }
+
+  while (sqlca.sqlcode != 100)
+  {
+    printf("    %-20.20s %-14.14s", columnName, dataType);
+    if (dataScale != 0)
+    {
+      printf(",%d\n", dataScale);
+    }
+    else
+    {
+      printf("\n");
+    }
+
+    EXEC SQL FETCH c1 INTO :columnName, :dataType, :dataLength, :dataScale;
+    /* EMB_SQL_CHECK("Cursor -- Fetch"); */
+  }
+
+  EXEC SQL CLOSE c1;
+  /* EMB_SQL_CHECK("Cursor -- Close"); */
+
+  return 0;
+} /* TbColumnInfoGet */
+
+int TbColumnInfoGet2(void)
+{
+  struct sqlca sqlca;
+
+  /* get info for table columns */
+  printf("     Number          Balance    \n");
+  printf("----------------- --------------\n");
+
+	 EXEC SQL DECLARE c2 CURSOR FOR
+    SELECT Number, Balance 
+      FROM P2.Account WHERE Status = 'A' AND Id=:inputID;
+	 
+  EXEC SQL OPEN c2;
+  /* EMB_SQL_CHECK("Cursor -- Open"); */
+
+  EXEC SQL FETCH c2 INTO :columnName, :dataType, :dataLength, :dataScale;;
+  /* EMB_SQL_CHECK("Cursor -- Fetch"); */
+
+  if (sqlca.sqlcode == 100)
+  {
+    printf("\n  Data not found.\n");
+  }
+
+  while (sqlca.sqlcode != 100)
+  {
+    printf("    %-20.20s %-14.14s", columnName, dataType);
+    if (dataScale != 0)
+    {
+      printf(",%d\n", dataScale);
+    }
+    else
+    {
+      printf("\n");
+    }
+
+    EXEC SQL FETCH c2 INTO :columnName, :dataType, :dataLength, :dataScale;
+    /* EMB_SQL_CHECK("Cursor -- Fetch"); */
+  }
+
+  EXEC SQL CLOSE c2;
+  /* EMB_SQL_CHECK("Cursor -- Close"); */
+
+  return 0;
+} /* TbColumnInfoGet */
+
+int TbColumnInfoGet3(void)
+{
+  struct sqlca sqlca;
+
+  /* get info for table columns */
+  printf("     ID              Age         Gender     Total Balance         \n");
+  printf("---------------- -------------- --------  -----------------------\n");
+
+	 EXEC SQL DECLARE c3 CURSOR FOR
+    SELECT A.ID, A.Age, A.Gender, SUM(B.Balance) AS TOTAL_BALANCE FROM P2.Customer A INNER JOIN P2.Account B ON A.ID = B.ID WHERE B.Status='A' GROUP BY A.ID, A.Name, A.Age, A.Gender ORDER BY TOTAL_BALANCE DESC;
+  EXEC SQL OPEN c3;
+  /* EMB_SQL_CHECK("Cursor -- Open"); */
+
+  EXEC SQL FETCH c3 INTO :id0, :age0, :gender0, :total0;
+  /* EMB_SQL_CHECK("Cursor -- Fetch"); */
+
+  if (sqlca.sqlcode == 100)
+  {
+    printf("\n  Data not found.\n");
+  }
+
+  while (sqlca.sqlcode != 100)
+  {
+    printf("    %s              %s             %s            %s", id0, age0, gender0, total0);
+    if (dataScale != 0)
+    {
+      //printf(",%d\n", dataScale);
+    }
+    else
+    {
+      printf("\n");
+    }
+
+    EXEC SQL FETCH c3 INTO :id0, :age0, :gender0, :total0;
+    /* EMB_SQL_CHECK("Cursor -- Fetch"); */
+  }
+
+  EXEC SQL CLOSE c2;
+  /* EMB_SQL_CHECK("Cursor -- Close"); */
+
+  return 0;
+} /* TbColumnInfoGet */
+
+int TbColumnInfoGet4(void)
+{
+  struct sqlca sqlca;
+
+  /* get info for table columns */
+  printf("   Average Age     Average Balance \n");
+  printf("----------------- -----------------\n");
+
+
+	 EXEC SQL DECLARE c4 CURSOR FOR
+    SELECT AVG(Age) AS AVG_AGE, AVG(Balance) AS AVG_BALANCE FROM P2.Customer INNER JOIN 
+	P2.Account ON P2.Customer.ID = P2.Account.ID WHERE P2.Account.Status = 'A' AND AGE>:min AND AGE<:max;
+	 
+  EXEC SQL OPEN c4;
+  /* EMB_SQL_CHECK("Cursor -- Open"); */
+
+  EXEC SQL FETCH c4 INTO :columnName, :dataType, :dataLength, :dataScale;;
+  /* EMB_SQL_CHECK("Cursor -- Fetch"); */
+
+  if (sqlca.sqlcode == 100)
+  {
+    printf("\n  Data not found.\n");
+  }
+
+  while (sqlca.sqlcode != 100)
+  {
+    printf("    %-20.20s %-14.14s", columnName, dataType);
+    if (dataScale != 0)
+    {
+      printf(",%d\n", dataScale);
+    }
+    else
+    {
+      printf("\n");
+    }
+
+    EXEC SQL FETCH c4 INTO :columnName, :dataType, :dataLength, :dataScale;
+    /* EMB_SQL_CHECK("Cursor -- Fetch"); */
+  }
+
+  EXEC SQL CLOSE c4;
+  /* EMB_SQL_CHECK("Cursor -- Close"); */
+
+  return 0;
+} /* TbColumnInfoGet */
